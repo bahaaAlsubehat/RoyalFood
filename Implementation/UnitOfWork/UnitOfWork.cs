@@ -1,4 +1,5 @@
 ﻿using Implementation.Repository;
+using Interface.Helper;
 using Interface.IRepository;
 using Interface.IUnitOfWork;
 using Interface.Models;
@@ -16,11 +17,11 @@ namespace Implementation.UnitOfWork
         private readonly RoyalFoodContext _context;
         private readonly ILogger<ConfigurationsManagementImp> _conflogger;
     
-        public UnitOfWork(RoyalFoodContext context, ILoggerFactory loggerFactory) 
+        public UnitOfWork(RoyalFoodContext context, ILoggerFactory loggerFactory, Helper helper) 
         {
             _context = context;
             _conflogger = loggerFactory.CreateLogger<ConfigurationsManagementImp>();
-            Configurationsmanagement = new ConfigurationsManagementImp(context, _conflogger);
+            Configurationsmanagement = new ConfigurationsManagementImp(context, _conflogger, helper);
         }
 
         public IConfigurationsManagement Configurationsmanagement { get; set; }
