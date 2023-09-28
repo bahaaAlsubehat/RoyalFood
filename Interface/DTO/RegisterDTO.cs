@@ -15,6 +15,7 @@ namespace Interface.DTO
         public bool gender { get; set; }
         public int age { get; set; }
         public int roleid { get; set; }
+        public string profileimage { get; set; }
 
         public string password { get; set; }
         public string email { get; set; }

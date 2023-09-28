@@ -17,12 +17,13 @@ namespace Interface.Models
         }
 
         public virtual DbSet<Cart> Carts { get; set; } = null!;
-        public virtual DbSet<CartItem> CartItems { get; set; } = null!;
-        public virtual DbSet<CartMeal> CartMeals { get; set; } = null!;
+        public virtual DbSet<CartItemMeal> CartItemMeals { get; set; } = null!;
         public virtual DbSet<Category> Categories { get; set; } = null!;
         public virtual DbSet<Customer> Customers { get; set; } = null!;
         public virtual DbSet<CustomerService> CustomerServices { get; set; } = null!;
         public virtual DbSet<Image> Images { get; set; } = null!;
+        public virtual DbSet<ImageItem> ImageItems { get; set; } = null!;
+        public virtual DbSet<ImageMeal> ImageMeals { get; set; } = null!;
         public virtual DbSet<Ingredient> Ingredients { get; set; } = null!;
         public virtual DbSet<IngredientItem> IngredientItems { get; set; } = null!;
         public virtual DbSet<Item> Items { get; set; } = null!;
@@ -31,6 +32,7 @@ namespace Interface.Models
         public virtual DbSet<Meal> Meals { get; set; } = null!;
         public virtual DbSet<Order> Orders { get; set; } = null!;
         public virtual DbSet<OrderStatus> OrderStatuses { get; set; } = null!;
+        public virtual DbSet<Payment> Payments { get; set; } = null!;
         public virtual DbSet<Role> Roles { get; set; } = null!;
         public virtual DbSet<User> Users { get; set; } = null!;
 
@@ -39,7 +41,7 @@ namespace Interface.Models
             if (!optionsBuilder.IsConfigured)
             {
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see http://go.microsoft.com/fwlink/?LinkId=723263.
-                optionsBuilder.UseSqlServer("Server=DESKTOP-98SV0L9;Database=RoyalFood;Trusted_Connection=True;");
+                optionsBuilder.UseSqlServer("Server=DESKTOP-98SV0L9;Database=RoyalFood;Trusted_Connection=True;Encrypt=false;TrustServerCertificate=True;");
             }
         }
 
@@ -55,34 +57,24 @@ namespace Interface.Models
                     .HasConstraintName("FK_Cart_User");
             });
 
-            modelBuilder.Entity<CartItem>(entity =>
+            modelBuilder.Entity<CartItemMeal>(entity =>
             {
-                entity.ToTable("CartItem");
+                entity.ToTable("CartItemMeal");
 
                 entity.HasOne(d => d.Cart)
-                    .WithMany(p => p.CartItems)
+                    .WithMany(p => p.CartItemMeals)
                     .HasForeignKey(d => d.CartId)
                     .HasConstraintName("FK_CartItem_Cart");
 
                 entity.HasOne(d => d.Item)
-                    .WithMany(p => p.CartItems)
+                    .WithMany(p => p.CartItemMeals)
                     .HasForeignKey(d => d.ItemId)
                     .HasConstraintName("FK_CartItem_Item");
-            });
-
-            modelBuilder.Entity<CartMeal>(entity =>
-            {
-                entity.ToTable("CartMeal");
-
-                entity.HasOne(d => d.Cart)
-                    .WithMany(p => p.CartMeals)
-                    .HasForeignKey(d => d.CartId)
-                    .HasConstraintName("FK_CartMeal_Cart");
 
                 entity.HasOne(d => d.Meal)
-                    .WithMany(p => p.CartMeals)
+                    .WithMany(p => p.CartItemMeals)
                     .HasForeignKey(d => d.MealId)
-                    .HasConstraintName("FK_CartMeal_Meal");
+                    .HasConstraintName("FK_CartItemMeal_Meal");
             });
 
             modelBuilder.Entity<Category>(entity =>
@@ -91,7 +83,11 @@ namespace Interface.Models
 
                 entity.Property(e => e.CategoryName).HasMaxLength(50);
 
+                entity.Property(e => e.CategoryNameAr).HasMaxLength(50);
+
                 entity.Property(e => e.Description).HasMaxLength(500);
+
+                entity.Property(e => e.DescriptionAr).HasMaxLength(50);
 
                 entity.HasOne(d => d.Image)
                     .WithMany(p => p.Categories)
@@ -117,6 +113,8 @@ namespace Interface.Models
 
                 entity.Property(e => e.Query).HasMaxLength(500);
 
+                entity.Property(e => e.UserResponse).HasMaxLength(500);
+
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.CustomerServices)
                     .HasForeignKey(d => d.UserId)
@@ -128,13 +126,37 @@ namespace Interface.Models
                 entity.ToTable("Image");
             });
 
+            modelBuilder.Entity<ImageItem>(entity =>
+            {
+                entity.ToTable("ImageItem");
+
+                entity.HasOne(d => d.Item)
+                    .WithMany(p => p.ImageItems)
+                    .HasForeignKey(d => d.ItemId)
+                    .HasConstraintName("FK_ImageItem_Item");
+            });
+
+            modelBuilder.Entity<ImageMeal>(entity =>
+            {
+                entity.ToTable("ImageMeal");
+
+                entity.HasOne(d => d.Meal)
+                    .WithMany(p => p.ImageMeals)
+                    .HasForeignKey(d => d.MealId)
+                    .HasConstraintName("FK_ImageMeal_Meal");
+            });
+
             modelBuilder.Entity<Ingredient>(entity =>
             {
                 entity.ToTable("Ingredient");
 
                 entity.Property(e => e.Describtion).HasMaxLength(500);
 
+                entity.Property(e => e.DescribtionAr).HasMaxLength(500);
+
                 entity.Property(e => e.Name).HasMaxLength(50);
+
+                entity.Property(e => e.NameAr).HasMaxLength(50);
 
                 entity.Property(e => e.Unit).HasMaxLength(50);
 
@@ -167,7 +189,11 @@ namespace Interface.Models
 
                 entity.Property(e => e.ItemDescribtion).HasMaxLength(500);
 
+                entity.Property(e => e.ItemDescriptionAr).HasMaxLength(500);
+
                 entity.Property(e => e.ItemName).HasMaxLength(50);
+
+                entity.Property(e => e.ItemNameAr).HasMaxLength(50);
 
                 entity.Property(e => e.LastModificationDate).HasColumnType("datetime");
 
@@ -175,11 +201,6 @@ namespace Interface.Models
                     .WithMany(p => p.Items)
                     .HasForeignKey(d => d.CategoryId)
                     .HasConstraintName("FK_Item_Category");
-
-                entity.HasOne(d => d.Image)
-                    .WithMany(p => p.Items)
-                    .HasForeignKey(d => d.ImageId)
-                    .HasConstraintName("FK_Item_Image");
 
                 entity.HasOne(d => d.LastModifiedUser)
                     .WithMany(p => p.Items)
@@ -220,17 +241,16 @@ namespace Interface.Models
 
                 entity.Property(e => e.MealDescription).HasMaxLength(500);
 
+                entity.Property(e => e.MealDescriptionAr).HasMaxLength(500);
+
                 entity.Property(e => e.MealName).HasMaxLength(50);
+
+                entity.Property(e => e.MealNameAr).HasMaxLength(50);
 
                 entity.HasOne(d => d.Category)
                     .WithMany(p => p.Meals)
                     .HasForeignKey(d => d.CategoryId)
                     .HasConstraintName("FK_Meal_Category");
-
-                entity.HasOne(d => d.Image)
-                    .WithMany(p => p.Meals)
-                    .HasForeignKey(d => d.ImageId)
-                    .HasConstraintName("FK_Meal_Image");
 
                 entity.HasOne(d => d.LastModifiedUser)
                     .WithMany(p => p.Meals)
@@ -243,6 +263,8 @@ namespace Interface.Models
                 entity.ToTable("Order");
 
                 entity.Property(e => e.CustomerNotes).HasMaxLength(500);
+
+                entity.Property(e => e.DelivaryAddress).HasMaxLength(500);
 
                 entity.Property(e => e.DeliveryDate).HasColumnType("datetime");
 
@@ -259,6 +281,11 @@ namespace Interface.Models
                     .WithMany(p => p.Orders)
                     .HasForeignKey(d => d.OrderStatusId)
                     .HasConstraintName("FK_Order_OrderStatus");
+
+                entity.HasOne(d => d.Payment)
+                    .WithMany(p => p.Orders)
+                    .HasForeignKey(d => d.PaymentId)
+                    .HasConstraintName("FK_Order_Payment");
             });
 
             modelBuilder.Entity<OrderStatus>(entity =>
@@ -268,6 +295,13 @@ namespace Interface.Models
                 entity.Property(e => e.Status)
                     .HasMaxLength(50)
                     .IsUnicode(false);
+            });
+
+            modelBuilder.Entity<Payment>(entity =>
+            {
+                entity.ToTable("Payment");
+
+                entity.Property(e => e.PaymentMethod).HasMaxLength(100);
             });
 
             modelBuilder.Entity<Role>(entity =>

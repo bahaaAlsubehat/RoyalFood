@@ -23,6 +23,7 @@ namespace Interface.Models
         public bool? Gender { get; set; }
         public int? Age { get; set; }
         public int? RoleId { get; set; }
+        public string? ProfileImage { get; set; }
 
         public virtual Role? Role { get; set; }
         public virtual ICollection<Cart> Carts { get; set; }

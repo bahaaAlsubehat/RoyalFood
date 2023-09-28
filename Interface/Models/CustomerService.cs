@@ -8,6 +8,7 @@ namespace Interface.Models
         public int CustomerServiceId { get; set; }
         public int? UserId { get; set; }
         public string? Query { get; set; }
+        public string? UserResponse { get; set; }
 
         public virtual User? User { get; set; }
     }

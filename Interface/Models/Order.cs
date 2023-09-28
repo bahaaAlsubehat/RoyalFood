@@ -13,8 +13,11 @@ namespace Interface.Models
         public DateTime? DeliveryDate { get; set; }
         public string? CustomerNotes { get; set; }
         public string? RatingandFeedback { get; set; }
+        public string? DelivaryAddress { get; set; }
+        public int? PaymentId { get; set; }
 
         public virtual Cart? Cart { get; set; }
         public virtual OrderStatus? OrderStatus { get; set; }
+        public virtual Payment? Payment { get; set; }
     }
 }

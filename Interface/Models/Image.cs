@@ -9,8 +9,6 @@ namespace Interface.Models
         {
             Categories = new HashSet<Category>();
             Ingredients = new HashSet<Ingredient>();
-            Items = new HashSet<Item>();
-            Meals = new HashSet<Meal>();
         }
 
         public int ImageId { get; set; }
@@ -19,7 +17,5 @@ namespace Interface.Models
 
         public virtual ICollection<Category> Categories { get; set; }
         public virtual ICollection<Ingredient> Ingredients { get; set; }
-        public virtual ICollection<Item> Items { get; set; }
-        public virtual ICollection<Meal> Meals { get; set; }
     }
 }

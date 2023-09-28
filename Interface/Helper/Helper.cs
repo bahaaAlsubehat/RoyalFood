@@ -1,4 +1,5 @@
 ﻿using Interface.DTO;
+using Interface.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System;
@@ -25,26 +26,46 @@ namespace Interface.Helper
         public string GenerateJwtToken(string email, string role, int userid, bool isactive)
         {
 
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenKey = Encoding.UTF8.GetBytes("LongSecrectStringForModulekodestartppopopopsdfjnshbvhueFGDKJSFBYJDSAGVYKDSGKFUYDGASYGFskcvhHJVCBYHVSKDGHASVBCL");
-            var tokenDescriptior = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new Claim[]
-                {
-                        new Claim(ClaimTypes.Email, email),
-                        new Claim(ClaimTypes.Role, role),
-                        new Claim("UserId", userid.ToString()),
-                        new Claim("Activation", isactive.ToString())
-                        
-                }),
-                Expires = DateTime.Now.AddHours(2),
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(tokenKey)
-                , SecurityAlgorithms.HmacSha256Signature)
-            };
-            var token = tokenHandler.CreateToken(tokenDescriptior);
-            return tokenHandler.WriteToken(token);
+            var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Jwt:Key"]));
+            var SigningCreds = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
+            List<Claim> claims = new();
+            claims.Add(new(JwtRegisteredClaimNames.Sub, email));
+            claims.Add(new(ClaimTypes.Role, role));
+            var token = new JwtSecurityToken(
+                _config["Jwt:Issuer"],
+                _config["Jwt:Audience"],
+                claims,
+                DateTime.UtcNow,
+                DateTime.UtcNow.AddHours(12),
+                SigningCreds
+            );
+            return "Bearer " + new JwtSecurityTokenHandler().WriteToken(token);
+        
         }
 
+        public bool ValidateJWTtoken(string tokenString, out LogoutResponse response)
+        {
+            String toke = "Bearer " + tokenString;
+            var jwtEncodedString = toke.Substring(7);
+
+            var token = new JwtSecurityToken(jwtEncodedString: jwtEncodedString);
+            DateTime dateTime = DateTime.UtcNow;
+            DateTime expires = token.ValidTo;
+            if (dateTime < expires)
+            {
+                //int userId = 
+                LogoutResponse tempresponse = new LogoutResponse();
+                tempresponse.userid = Int32.Parse((token.Claims.First(c => c.Type == "userid").Value.ToString()));
+                tempresponse.loginid = Int32.Parse(token.Claims.First(c => c.Type == "loginid").Value.ToString());
+                tempresponse.cartUser = null;
+                response = tempresponse;
+                return true;
+            }
+            response = null;
+            return false;
+
+
+        }
 
 
         public string GenerateSHA384String(string inputString)

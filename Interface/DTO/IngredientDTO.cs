@@ -8,12 +8,16 @@ namespace Interface.DTO
 {
     public class IngredientDTO
     {
-        public string ingName {  get; set; }    
-        public string ingDescription { get; set; }
-        public string unit { get; set; }
+        public string? ingName {  get; set; }
+        public string? ingNameAr { get; set; }
 
-        public int imageId { get; set; }
-        public bool isactive { get; set; }
+        public string? ingDescription { get; set; }
+        public string? ingDescriptionAr { get; set; }
+
+        public string? unit { get; set; }
+
+        public int? imageId { get; set; }
+        public bool? isactive { get; set; }
 
     }
 }

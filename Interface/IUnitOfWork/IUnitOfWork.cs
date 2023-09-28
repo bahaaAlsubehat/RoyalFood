@@ -10,6 +10,8 @@ namespace Interface.IUnitOfWork
     public interface IUnitOfWork
     {
         IConfigurationsManagement Configurationsmanagement { get; }
+        IMenuManagement Menumanagement { get; }
+        IOrderManagement Ordermanagement { get; }
         Task CompleteAsync();
         void Dispose();
     }

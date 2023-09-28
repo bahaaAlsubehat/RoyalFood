@@ -19,12 +19,12 @@ namespace Implementation.Repository
         private readonly RoyalFoodContext _context;
         private readonly ILogger<ConfigurationsManagementImp> _logger;
         private readonly Helper helper;
-            
-        public ConfigurationsManagementImp(RoyalFoodContext context,ILogger<ConfigurationsManagementImp> logger, Helper helper) 
+
+        public ConfigurationsManagementImp(RoyalFoodContext context,ILogger<ConfigurationsManagementImp> logger, Helper _helper) 
         { 
             _context = context;
             _logger = logger;
-            this.helper = helper;
+            this.helper = _helper;
         }
 
         #region Role
@@ -34,16 +34,14 @@ namespace Implementation.Repository
             try
             {
                 var RolesAll = await _context.Roles.ToListAsync();
-                return RolesAll;
                 _logger.LogInformation("We Get All Roles");
 
                 return RolesAll;
             }
             catch (Exception ex)
-            { 
-                return null;
+            {
                 _logger.LogError(ex.Message);
-            
+
                 return null;
 
             }
@@ -63,22 +61,20 @@ namespace Implementation.Repository
                 }
                 else
                 {
-                    Role role = new() 
+                    Role role = new()
                     {
                         RoleName = roleDTO.name,
                         Permissions = roleDTO.permission
-                    
+
                     };
                     await _context.AddAsync(role);
                     return "Created Role";
                 }
-                _logger.LogInformation("Done");
             }
-            catch (Exception ex) 
+            catch (Exception ex)
             {
-                return null;
                 _logger.LogError($"{ex.Message}");
-            
+
                 return null;
 
             }
@@ -106,13 +102,13 @@ namespace Implementation.Repository
             {
                 _logger.LogDebug(ex.Message);
                 return ex.Message;
-                
+
             }
         }
         public async Task<List<Role>> SortRole(int? id, string? Name, string? permission)
         {
             var SortingRole = await _context.Roles.ToListAsync();
-            try 
+            try
             {
                 if (SortingRole == null)
                 {
@@ -194,6 +190,7 @@ namespace Implementation.Repository
                         Address = registerDTO.Addrss,
                         Gender = registerDTO.gender,
                         RoleId = registerDTO.roleid,
+                        ProfileImage = registerDTO.profileimage
                     };
 
                     if (user.RoleId == 0 || user.RoleId is null)
@@ -368,33 +365,67 @@ namespace Implementation.Repository
                 return null;
             }
             catch (Exception ex)
-            { 
-                return null;  
+            {
+                return null;
             }
         }
 
         //Logout Not Completetd
 
-        public async Task<string> Logount(LoginDTO loginDTO)
+        public async Task<bool> Logount(string token)
         {
-            return null;
+            try
+            {
+                LogoutResponse response = new LogoutResponse();
+                if (helper.ValidateJWTtoken(token, out response))
+                {
+                    if(response.loginid != null)
+                    {
+                        var logout = await _context.Logins.Where(x => x.LoginId == response.loginid).SingleOrDefaultAsync();
+                        if(logout != null) 
+                        {
+                            if (logout.IsActive == true)
+                            {
+                                logout.IsActive = false;
+                                _context.Update(logout);
+                                _logger.LogInformation("Logout Susseccefully");
+                                return true;
+
+                            }
+                        }
+
+                    }
+                  
+                }
+                
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("error");
+                return false;
+            }
         }
 
         #endregion
 
+
+        #region Ingredient
         public async Task<string> CreateIngredient(IngredientDTO ingredientDTO)
         {
             try
             {
                 if (ingredientDTO != null)
                 {
-                   
+
                     Ingredient ingredient = new()
                     {
                         Name = ingredientDTO.ingName,
+                        NameAr = ingredientDTO.ingNameAr,
                         Describtion = ingredientDTO.ingDescription,
+                        DescribtionAr = ingredientDTO.ingDescriptionAr,
                         Unit = ingredientDTO.unit,
-                        IsActive =ingredientDTO.isactive,
+                        IsActive = ingredientDTO.isactive,
                         ImageId = ingredientDTO.imageId
 
                     };
@@ -409,34 +440,36 @@ namespace Implementation.Repository
                 _logger.LogError(ex.Message);
                 return ex.Message;
 
-            } 
+            }
         }
-       public async Task<string> EditeIngredient(int id, IngredientDTO ingredientDTO) 
-       {
+        public async Task<string> EditeIngredient(int id, IngredientDTO ingredientDTO)
+        {
             try
             {
-                var EditeIngred = await _context.Ingredients.FirstOrDefaultAsync(x=>x.IngredientId == id);
-                if(EditeIngred != null)
+                var EditeIngred = await _context.Ingredients.FirstOrDefaultAsync(x => x.IngredientId == id);
+                if (EditeIngred != null)
                 {
                     EditeIngred.Name = ingredientDTO.ingName;
+                    EditeIngred.NameAr = ingredientDTO.ingNameAr;
                     EditeIngred.Describtion = ingredientDTO.ingDescription;
+                    EditeIngred.DescribtionAr = ingredientDTO.ingDescriptionAr;
                     EditeIngred.IsActive = ingredientDTO.isactive;
                     EditeIngred.ImageId = ingredientDTO.imageId;
 
                     _context.Update(EditeIngred);
                     _logger.LogInformation("Updating Ingredient");
                     return $"Updating Ingredient id: {id}";
-            
+
                 }
                 _logger.LogInformation($"Null Id: {id}");
                 return $"Null Id: {id}";
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return ex.Message;
             }
-           
+
         }
 
         public async Task<List<Ingredient>> ViewIngredients()
@@ -444,33 +477,335 @@ namespace Implementation.Repository
             try
             {
                 var AllIngredients = await _context.Ingredients.ToListAsync();
-                if(AllIngredients != null) return AllIngredients;
+                if (AllIngredients != null) return AllIngredients;
                 _logger.LogInformation($"ViewIngredients{AllIngredients}");
                 return null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex.Message);
                 return null;
             }
-            
+
         }
-        public async Task<List<Ingredient>> SortIngredient(int? id, string ingName)
+        public async Task<List<Ingredient>> SortIngredient(int? id, string ingName, string? ingNameAr)
         {
             try
             {
                 var SortIngred = await _context.Ingredients.ToListAsync();
                 if (id != null) { SortIngred = await _context.Ingredients.Where(x => x.IngredientId == id).ToListAsync(); _logger.LogInformation($"Sorting by Ingredients Name: {SortIngred}"); return SortIngred; }
                 if (ingName != null) { SortIngred = await _context.Ingredients.Where(x => x.Name.Contains(ingName)).ToListAsync(); _logger.LogInformation($"Sorting by Ingredients Name: {SortIngred}"); return SortIngred; }
+                if (ingNameAr != null) { SortIngred = await _context.Ingredients.Where(x => x.Name.Contains(ingNameAr)).ToListAsync(); _logger.LogInformation($"Sorting by Ingredients Name: {SortIngred}"); return SortIngred; }
+
                 return null;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogInformation($"Error: {ex.Message}");
                 return null;
 
             }
         }
+        #endregion
+
+
+        #region Category
+        public async Task<string> AddCategory(CategoryDTO categoryDTO)
+        {
+            try
+            {
+                if (categoryDTO != null)
+                {
+                    Category category = new()
+                    {
+                        CategoryName = categoryDTO.categoryName,
+                        CategoryNameAr = categoryDTO.categoryNameAr,
+                        Description = categoryDTO.description,
+                        DescriptionAr = categoryDTO.descriptionAr,
+                        IsActive = categoryDTO.isactive,
+                        ImageId = categoryDTO.imageId
+                    };
+                    await _context.AddAsync(category);
+                    _logger.LogInformation($"Successfully Add Category {category}");
+                    return "Successfully Add Category";
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return ex.Message;
+
+            }
+        }
+
+        public async Task<string> EditeCategory(int id, CategoryDTO categoryDTO)
+        {
+            try
+            {
+                var Editecat = await _context.Categories.FirstOrDefaultAsync(x => x.CategoryId == id);
+                if (Editecat != null)
+                {
+                    Editecat.CategoryName = categoryDTO.categoryName;
+                    Editecat.CategoryNameAr = categoryDTO.categoryNameAr;
+                    Editecat.Description = categoryDTO.description; 
+                    Editecat.DescriptionAr = categoryDTO.descriptionAr;
+                    Editecat.IsActive = categoryDTO.isactive;
+                    Editecat.ImageId = categoryDTO.imageId;
+                    _context.Update(Editecat);
+                    _logger.LogInformation($"Updated successFully{Editecat}");
+                    return "Updated successFully";
+                }
+                return null;
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return ex.Message;
+
+            }
+        }
+
+
+        public async Task<List<Category>> AllCategories()
+        {
+            try
+            {
+                var AllCat = await _context.Categories.ToListAsync();
+                if (AllCat is null) return null;
+                _logger.LogInformation("Get All Categories");
+                return AllCat;
+
+            }
+            catch (Exception ex)
+            {
+
+                _logger.LogError("Error");
+                return null;
+
+            }
+        }
+
+        public async Task<List<Category>> SortCategory(int? id, string? Name, string? NameAr)
+        {
+            try
+            {
+                var SortCat = await _context.Categories.ToListAsync();
+                if (id != null)
+                {
+                    SortCat = await _context.Categories.Where(x => x.CategoryId == id).ToListAsync();
+                    return SortCat;
+
+                }
+                if (Name != null)
+                {
+                    SortCat = await _context.Categories.Where(x => x.CategoryName.Contains(Name)).ToListAsync();
+                    return SortCat;
+
+                }
+                if (NameAr != null)
+                {
+                    SortCat = await _context.Categories.Where(x => x.CategoryNameAr.Contains(NameAr)).ToListAsync();
+                    return SortCat;
+
+                }
+                return null;
+
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return null;
+            }
+        }
+        #endregion
+
+        #region Image
+        public async Task<string> CreateImagePath(ImageDTO imageDTO)
+        {
+            try
+            {
+                if (imageDTO is null) return string.Empty;
+                Image image = new()
+                {
+                    Path = imageDTO.path,
+                    IsDefault = imageDTO.isDefault
+                };
+                await _context.Images.AddAsync(image);
+                _logger.LogInformation("We Added Image Path");
+                return "Added Image Path Successfully";
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return string.Empty;
+            }
+        }
+        public async Task<string> EditeImage(int id, ImageDTO imageDTO)
+        {
+            try
+            {
+                var Editeimg = await _context.Images.FirstOrDefaultAsync(x => x.Path == imageDTO.path);
+                if (Editeimg is null) return string.Empty;
+                Editeimg.Path = imageDTO.path;
+                Editeimg.IsDefault = imageDTO.isDefault;
+                _context.Update(Editeimg);
+                _logger.LogInformation("Updated Successfully");
+                return "Updated Successfully";
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return string.Empty;
+            }
+        }
+        public async Task<List<Image>> AllImages()
+        {
+            try
+            {
+                var Allimg = await _context.Images.ToListAsync();
+                if (Allimg is null) return null;
+                _logger.LogInformation("Fetch List");
+                return Allimg;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return null;
+
+            }
+        }
+
+        public async Task<List<Image>> SortImages(int? id, string? Path)
+        {
+            try
+            {
+                var Sortimg = await _context.Images.ToListAsync();
+                if (id != null)
+                {
+                    Sortimg = await _context.Images.Where(x => x.ImageId == id).ToListAsync();
+                    return Sortimg;
+                }
+                if (Path != null)
+                {
+                    Sortimg = await _context.Images.Where(x => x.Path.Contains(Path)).ToListAsync();
+                    return Sortimg;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return null;
+
+            }
+
+        }
+        #endregion
+
+        #region ItemImages
+        public async Task<string> CreateItemImage(ItemImageDTO itemimgDTO)
+        {
+            try
+            {
+                ImageItem imgitem = new()
+                {
+                    ItemId = itemimgDTO.itemid,
+                    Path = itemimgDTO.imagepath,
+                    IsDefault = itemimgDTO.isdefult
+                };
+                await _context.AddAsync(imgitem);
+                _logger.LogInformation("Successfully added image for item");
+                return "Successfully added image for item";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error");
+                return string.Empty;
+
+            }
+        }
+
+        public async Task<string> EditeItemImage(int id, ItemImageDTO itemimgDTO)
+        {
+            try
+            {
+                var itemimg = await _context.ImageItems.SingleOrDefaultAsync(x => x.ImageItemId == id);
+                if (itemimg != null)
+                {
+                    itemimg.ItemId = itemimgDTO.itemid;
+                    itemimg.Path = itemimgDTO.imagepath;
+                    itemimg.IsDefault = itemimgDTO.isdefult;
+                    _context.Update(itemimg);
+                    _logger.LogInformation("Successfully updated itemimage");
+                    return "Successfully updated itemimage";
+
+
+                }
+                return "incorrect id or empty itemimage";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError("Error");
+                return string.Empty;
+            }
+        }
+        #endregion
+
+        #region MealImages
+        public async Task<string> CreateMealImage(MealImageDTOcs mealimageDTO)
+        {
+            try
+            {
+                ImageMeal imagemeal = new()
+                {
+                    MealId = mealimageDTO.mealid,
+                    Path = mealimageDTO.imagepath,
+                    IsDefualt = mealimageDTO.isdefult
+                    
+                };
+                await _context.AddAsync(imagemeal);
+                _logger.LogInformation("Added ImageMeal Successfully");
+                return "Added ImageMeal Successfully";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError("Error");
+                return string.Empty;
+            }
+        }
+
+        public async Task<string> EditeMealImage(int id, MealImageDTOcs mealimageDTO)
+        {
+            try
+            {
+                var mealimg = await _context.ImageMeals.SingleOrDefaultAsync(x => x.ImageMealId == id);
+                if (mealimg != null)
+                {
+                    mealimg.MealId = mealimageDTO.mealid;
+                    mealimg.Path = mealimageDTO.imagepath;
+                    mealimg.IsDefualt = mealimageDTO.isdefult;
+                    _context.Update(mealimg);
+                    _logger.LogInformation("Successfully updated MealImage");
+                    return "Successfully updated MealImage";
+
+
+                }
+                return "incorrect id or empty MealImage";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError("Error");
+                return string.Empty;
+            }
+        }
+        #endregion
+
+
 
     }
 }

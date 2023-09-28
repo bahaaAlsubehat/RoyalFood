@@ -12,7 +12,9 @@ namespace Interface.Models
 
         public int IngredientId { get; set; }
         public string? Name { get; set; }
+        public string? NameAr { get; set; }
         public string? Describtion { get; set; }
+        public string? DescribtionAr { get; set; }
         public string? Unit { get; set; }
         public bool? IsActive { get; set; }
         public int? ImageId { get; set; }

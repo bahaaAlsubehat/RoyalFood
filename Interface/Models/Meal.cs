@@ -7,14 +7,16 @@ namespace Interface.Models
     {
         public Meal()
         {
-            CartMeals = new HashSet<CartMeal>();
+            CartItemMeals = new HashSet<CartItemMeal>();
+            ImageMeals = new HashSet<ImageMeal>();
             ItemMeals = new HashSet<ItemMeal>();
         }
 
         public int MealId { get; set; }
         public string? MealName { get; set; }
+        public string? MealNameAr { get; set; }
         public string? MealDescription { get; set; }
-        public int? ImageId { get; set; }
+        public string? MealDescriptionAr { get; set; }
         public int? CategoryId { get; set; }
         public bool? Availability { get; set; }
         public double? Price { get; set; }
@@ -22,9 +24,9 @@ namespace Interface.Models
         public int? LastModifiedUserId { get; set; }
 
         public virtual Category? Category { get; set; }
-        public virtual Image? Image { get; set; }
         public virtual User? LastModifiedUser { get; set; }
-        public virtual ICollection<CartMeal> CartMeals { get; set; }
+        public virtual ICollection<CartItemMeal> CartItemMeals { get; set; }
+        public virtual ICollection<ImageMeal> ImageMeals { get; set; }
         public virtual ICollection<ItemMeal> ItemMeals { get; set; }
     }
 }
