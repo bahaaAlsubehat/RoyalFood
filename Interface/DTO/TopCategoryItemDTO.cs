@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 
 namespace Interface.DTO
 {
-    public class ItemImageGetDTO
+    public class TopCategoryItemDTO
     {
         public int? itemid { get; set; }
-        public string? imgitmid { get; set; }
-        public string? path { get; set; }
-        public string? isdefault { get; set; }
+        public int? categoryid { get; set; }
+        public string? categoryname { get; set; }
+        public int? qnty { get; set; }
     }
 }

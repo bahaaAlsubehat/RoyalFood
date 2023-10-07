@@ -12,6 +12,8 @@ namespace Interface.IUnitOfWork
         IConfigurationsManagement Configurationsmanagement { get; }
         IMenuManagement Menumanagement { get; }
         IOrderManagement Ordermanagement { get; }
+        ICustomersManagement Customersmanagement { get; }
+        ISalesDashboard Salesdashboard { get; }
         Task CompleteAsync();
         void Dispose();
     }

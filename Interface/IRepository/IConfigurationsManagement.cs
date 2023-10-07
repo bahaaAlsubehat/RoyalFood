@@ -27,7 +27,7 @@ namespace Interface.IRepository
         Task<string> UpdatePassword(ResetPasswordDTO resetPasswordDTO);
         Task<string> PutNewPaaword(ForgetPasswordDTO forgetPasswordDTO);
         Task<List<User>> SortUsers(int? roleid, string? fname, string? lastname, string? address);
-        Task<bool> Logount(string token);
+        Task<string> Logount(string token);
          
         #endregion
 

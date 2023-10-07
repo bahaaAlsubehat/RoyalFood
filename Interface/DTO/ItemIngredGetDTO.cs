@@ -8,6 +8,7 @@ namespace Interface.DTO
 {
     public class ItemIngredGetDTO
     {
+        public int? itemid { get; set; }
         public string ingredientName { get; set; }
         public string ingredientNameAr { get; set; }
         public string unit { get; set; }

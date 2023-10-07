@@ -8,6 +8,7 @@ namespace Interface.DTO
 {
     public class ImagesMealGetDTO
     {
+        public int mealid { get; set; }
         public string imageid { get; set; }
         public string imagepath { get; set; }
         public string isdefault { get; set; }

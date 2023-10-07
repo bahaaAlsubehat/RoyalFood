@@ -73,12 +73,14 @@ namespace RoyalFood.Controllers
             var getallMeals = await _unitOfWork.Menumanagement.AllMeals();
             int PageSkip = (PAgeSize * PageNumber) - PAgeSize;
             await _unitOfWork.CompleteAsync();
-            return Ok(getallMeals.Take(PageSkip).Skip(PAgeSize));
+            return Ok(getallMeals.Skip(PageSkip).Take(PAgeSize));
         }
         [HttpGet("FilterMeals")]
         public async Task<IActionResult> FilterMeals(int PAgeSize, int PageNumber, int? id, string? namear, string? nameing , string? descar, string? descing, float? price)
         {
-            return Ok();
+            var filtermeal =  await _unitOfWork.Menumanagement.SortungMeal(id, namear, nameing, descar, descing, price);
+            int PageSkip = PageNumber*PAgeSize - PAgeSize;
+            return Ok(filtermeal.Skip(PageSkip).Take(PAgeSize));
         }
         #endregion
 

@@ -47,16 +47,17 @@ namespace Interface.Helper
         {
             String toke = "Bearer " + tokenString;
             var jwtEncodedString = toke.Substring(7);
-
+            //var handler = new JwtSecurityTokenHandler();
+            //var tokendata = handler.ReadJwtToken(toke) as JwtSecurityToken;
             var token = new JwtSecurityToken(jwtEncodedString: jwtEncodedString);
+
             DateTime dateTime = DateTime.UtcNow;
             DateTime expires = token.ValidTo;
             if (dateTime < expires)
             {
-                //int userId = 
                 LogoutResponse tempresponse = new LogoutResponse();
-                tempresponse.userid = Int32.Parse((token.Claims.First(c => c.Type == "userid").Value.ToString()));
-                tempresponse.loginid = Int32.Parse(token.Claims.First(c => c.Type == "loginid").Value.ToString());
+                tempresponse.userid = Int32.Parse((token.Claims.First(c => c.Type == "UserId").Value.ToString()));
+                tempresponse.loginid = Int32.Parse(token.Claims.First(c => c.Type == "LoginId").Value.ToString());
                 tempresponse.cartUser = null;
                 response = tempresponse;
                 return true;

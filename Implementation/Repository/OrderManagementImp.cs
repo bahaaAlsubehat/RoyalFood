@@ -3,6 +3,7 @@ using Interface.IRepository;
 using Interface.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +25,7 @@ namespace Implementation.Repository
 
         public async Task<string> CreateCart(int userid, int? itemid, int? mealid, int qnty)
         {
-            var cart = await _context.Carts.Where(x=>x.UserId ==userid).SingleOrDefaultAsync();
+            var cart = await _context.Carts.Where(x=>x.UserId ==userid && x.IsActive == true).SingleOrDefaultAsync();
             if (cart != null)
             {
                 var item = await _context.Items.Where(x=>x.ItemId == itemid).SingleOrDefaultAsync();
@@ -160,6 +161,139 @@ namespace Implementation.Repository
             }
 
         }
+        public async Task<string> DeleteFromCart(int cartitml)
+        {
+            try
+            {
+                var cartitemmmeal = await _context.CartItemMeals.Where(x=>x.CartItemMealId == cartitml).SingleOrDefaultAsync();
+                if(cartitemmmeal != null) 
+                {
+                    var cart = await _context.Carts.Where(x=>x.CartId == cartitemmmeal.CartId).SingleOrDefaultAsync();
+                    if(cart != null) 
+                    { 
+                        if(cartitemmmeal.Quantity == 1)
+                        {
+                            _context.Remove(cartitemmmeal);
+                            _logger.LogInformation("You Removed it from Cart");
+                            return "You Removed it from Cart";
+                        }
+                        else
+                        {
+                            cartitemmmeal.Quantity -= 1;
+                            _context.Update(cartitemmmeal);
+                            _logger.LogInformation("You Removed quantity it from Cart");
+                            return "You Removed quantity it from Cart";
+
+
+                        }
+
+                    }
+                }
+                return string.Empty;
+            }
+            catch (Exception ex) 
+            {
+                _logger.LogError("We Get Exception");
+                return ex.Message;
+            
+            }
+        }
+        public async Task<string> AddNewOrder(OrderDTO orderDTO)
+        {
+            try
+            {
+                var cart =  await _context.Carts.Where(x=>x.CartId == orderDTO.cartid && x.IsActive == true).SingleOrDefaultAsync();
+                if (cart != null )
+                {
+                    cart.IsActive = false;
+                    _context.Update(cart);
+                    _context.SaveChanges();
+
+                    Order order = new()
+                    {
+                        CartId = orderDTO.cartid,
+                        OrderDate = DateTime.UtcNow,
+                        TotalPrice =  _context.CartItemMeals.Where(x=>x.CartId == orderDTO.cartid).Sum(x=>x.NetPrice),
+                        OrderStatusId = 1,
+                        DelivaryAddress = orderDTO.deliveryaddress,
+                        DeliveryDate = DateTime.UtcNow.AddHours(0.5-2),
+                        CustomerNotes = orderDTO.customernote,
+                        PaymentId = orderDTO.paymentid,
+                    };
+                    if(order.OrderStatusId == 4) { order.RatingandFeedback = orderDTO.ratingfeedback; } 
+                    await _context.AddAsync(order);
+                    _logger.LogInformation("Create A new Order");
+                    return "Successfully Creating Order";
+                }
+                return "Empty Cart return to Menu Page to Add Items or Meals";
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex.Message);
+                return ex.Message;
+            }
+        }
+        public async Task<List<OrderResponseDTO>> Allorders()
+        {
+            try
+            {
+                var orderall = await _context.Orders.ToListAsync();
+                if (orderall != null)
+                {
+                    var cart = await _context.Carts.Where(x=>x.IsActive == false).ToListAsync();
+                    var cartmeal = await _context.CartItemMeals.ToListAsync();
+                    var item = await _context.Items.ToListAsync();
+                    var meal =await _context.Meals.ToListAsync();
+
+                    var result = from c in cart
+                                 join cim in cartmeal on c.CartId equals cim.CartId
+                                 where cim.ItemId != null
+                                 join i in item on cim.ItemId equals i.ItemId into ilist from i in ilist.DefaultIfEmpty()
+                                 where ilist != null
+                                 join m in meal on cim.MealId equals m.MealId into mlist from m in mlist.DefaultIfEmpty()
+                                 where mlist != null
+                                 //where c.CartId == cim.CartId
+                                 join o in orderall on c.CartId equals o.CartId
+                                 select new OrderItemandItemDTO
+                                 {
+                                     orderid = o.OrderId,
+                                     itemid = cim?.ItemId,
+                                     mealid = cim?.MealId,
+                                     itemname = i?.ItemName, /*item.Where(x=>x.ItemId.Equals(cim?.ItemId)).First()?.ItemName,*/
+                                     mealname = m?.MealName,  //meal.Where(x => x.MealId.Equals(cim?.MealId)).First()?.MealName,
+                                     qnty = cim.Quantity.ToString(),
+                                     netprice = cim.NetPrice.ToString()
+                                 };
+
+
+                    List < OrderResponseDTO > responseDTOs = new List<OrderResponseDTO>();
+                    foreach (var order in orderall)
+                    {
+                        responseDTOs.Add(new OrderResponseDTO
+                        {
+                            ordernumber = order.OrderId.ToString(),
+                            //customername = _context.Users.Where(x => x.UserId == cart.Single(y=>y.CartId == order.CartId).UserId).Single().FirstName,
+                            //customerphone = _context.Users.Where(x => x.UserId == cart.Find(y=> y.CartId == order.CartId).UserId).SingleOrDefault().Phone,
+                            orderDate = order.OrderDate.ToString(),
+                            delivarydate = order.DeliveryDate.ToString(),
+                            orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                            totalprice = order.TotalPrice.ToString(),
+                            orderitmlDTO = result?.Where(x=>x.orderid == order.OrderId).ToList() 
+                        });
+                    }
+                    _logger.LogInformation("Show the list of Orders");
+                    return responseDTOs;
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex.Message);
+                return new List<OrderResponseDTO> { };
+
+            }
+        }
+
 
         #region OrderStatus
         public async Task<string> CreateOrderStatus(string OrderStatus)

@@ -18,7 +18,7 @@ namespace RoyalFood.Controllers
         
         }
         [AllowAnonymous]
-        [HttpGet("AddToCart{userid}")]
+        [HttpPost("AddToCart{userid}")]
         public async Task<IActionResult> AddToCart(int userid, int? itemid,  int? mealid, int qnty)
         {
             var cartAdd = await _unitOfWork.Ordermanagement.CreateCart(userid, itemid, mealid, qnty);
@@ -26,11 +26,30 @@ namespace RoyalFood.Controllers
             return Ok(cartAdd);
         }
 
-        //[HttpGet("ViewOrderDetails")]
-        //public async Task<IActionResult> ViewOrderDetails()
-        //{
-        //    return Ok();
-        //}
+        [HttpPut("RemoveFromCart")]
+        public async Task<IActionResult> RemoveFromCart(int cartitml)
+        {
+            var removefromcart = await _unitOfWork.Ordermanagement.DeleteFromCart(cartitml);
+            await _unitOfWork.CompleteAsync();
+            return Ok(removefromcart);
+        }
+
+        [HttpPost("CheckoutOrder")]
+        public async Task<IActionResult> CheckoutOrder(OrderDTO orderDTO)
+        {
+            var checkoutorder = await _unitOfWork.Ordermanagement.AddNewOrder(orderDTO);
+            await _unitOfWork.CompleteAsync();
+            return Ok(checkoutorder);
+        }
+
+        [HttpGet("ViewOrderDetails")]
+        public async Task<IActionResult> ViewOrderDetails(int PageSize, int PageNumber)
+        {
+            var orderGet = await _unitOfWork.Ordermanagement.Allorders();
+            await _unitOfWork.CompleteAsync();
+            int PageSkip = PageNumber * PageSize - PageSize;
+            return Ok(orderGet.Skip(PageSkip).Take(PageSize));
+        }
         #region OrderStatus
         [Authorize(Roles = "Admin")]
         [HttpPost("AddOrderStatus")]

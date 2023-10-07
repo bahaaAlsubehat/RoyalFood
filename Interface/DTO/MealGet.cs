@@ -13,7 +13,6 @@ namespace Interface.DTO
         public string? nameAr { get; set; }
         public string? description { get; set; }
         public string? descriptionAr { get; set; }
-        public string? image { get; set; }
         public string? category { get; set; }
         public string? price { get; set; }
         public string? availability { get; set; }

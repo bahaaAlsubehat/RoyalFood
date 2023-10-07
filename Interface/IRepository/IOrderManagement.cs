@@ -12,6 +12,9 @@ namespace Interface.IRepository
     {
 
         Task<string> CreateCart(int userid, int? itemid, int? mealid, int qnty);
+        Task<string> DeleteFromCart(int cartitml);
+        Task<string> AddNewOrder(OrderDTO orderDTO);
+        Task<List<OrderResponseDTO>> Allorders();
 
         #region OrderStatus
         Task<string> CreateOrderStatus(string OrderStatus);

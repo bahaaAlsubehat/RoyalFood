@@ -68,6 +68,8 @@ builder.Services.AddDbContext<RoyalFoodContext>(options => options.UseSqlServer(
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IConfigurationsManagement, ConfigurationsManagementImp>();
 builder.Services.AddScoped<IMenuManagement, MenuManagementImp>();
+builder.Services.AddScoped<IOrderManagement, OrderManagementImp>();
+builder.Services.AddScoped<ISalesDashboard, SalesDashboardImp>();
 builder.Services.AddSingleton<Helper>();
 
 

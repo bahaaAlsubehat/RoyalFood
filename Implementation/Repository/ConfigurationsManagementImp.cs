@@ -372,38 +372,37 @@ namespace Implementation.Repository
 
         //Logout Not Completetd
 
-        public async Task<bool> Logount(string token)
+        public async Task<string> Logount(string token)
         {
             try
             {
+
+
                 LogoutResponse response = new LogoutResponse();
                 if (helper.ValidateJWTtoken(token, out response))
                 {
-                    if(response.loginid != null)
+                    if (response.loginid != null)
                     {
                         var logout = await _context.Logins.Where(x => x.LoginId == response.loginid).SingleOrDefaultAsync();
-                        if(logout != null) 
+                        if (logout != null)
                         {
                             if (logout.IsActive == true)
                             {
                                 logout.IsActive = false;
                                 _context.Update(logout);
                                 _logger.LogInformation("Logout Susseccefully");
-                                return true;
+                                return "Successfull Logout";
 
                             }
                         }
-
                     }
-                  
                 }
-                
-                return false;
+                return null;
             }
             catch (Exception ex)
             {
                 _logger.LogDebug("error");
-                return false;
+                return ex.Message;
             }
         }
 
