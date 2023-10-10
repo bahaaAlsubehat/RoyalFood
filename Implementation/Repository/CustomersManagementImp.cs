@@ -43,7 +43,7 @@ namespace Implementation.Repository
                                  orderdate = o.OrderDate?.ToString(),
                                  delivarydate = o.DeliveryDate?.ToString(),
                                  totalprice = o.TotalPrice?.ToString(),
-                                 orderstatus =/* o.OrderStatusId?.ToString() */_context.OrderStatuses.Where(x => x.OrderStatusId == o.OrderStatusId).First().Status,
+                                 orderstatus =_context.OrderStatuses.Where(x => x.OrderStatusId == o.OrderStatusId).First().Status,
 
                              };
 
@@ -59,6 +59,7 @@ namespace Implementation.Repository
                         eamil = _context.Logins.Where(y => y.UserId == x.UserId).FirstOrDefault()?.Email,
                         address = x.Address,
                         ////lastlogin = _context.Logins.Where(x=>x.UserId == x.UserId).
+                        lastorderdate = _context.Orders.OrderByDescending(f=>f.Cart.UserId == x.UserId).FirstOrDefault().OrderDate,
                         customerorderlist = result?.Where(y=>y.userid == x.UserId).ToList()
 
 
@@ -114,6 +115,7 @@ namespace Implementation.Repository
                             eamil = _context.Logins.Where(y => y.UserId == x.UserId).FirstOrDefault()?.Email,
                             address = x.Address,
                             ////lastlogin = _context.Logins.Where(x=>x.UserId == x.UserId).
+                            lastorderdate = _context.Orders.OrderByDescending(f => f.Cart.UserId == x.UserId).FirstOrDefault().OrderDate,
                             customerorderlist = result?.Where(y => y.userid == x.UserId).ToList()
 
 
@@ -156,6 +158,7 @@ namespace Implementation.Repository
                             eamil = _context.Logins.Where(y => y.UserId == x.UserId).FirstOrDefault()?.Email,
                             address = x.Address,
                             ////lastlogin = _context.Logins.Where(x=>x.UserId == x.UserId).
+                            lastorderdate = _context.Orders.OrderByDescending(f => f.Cart.UserId == x.UserId).FirstOrDefault().OrderDate,
                             customerorderlist = result?.Where(y => y.userid == x.UserId).ToList()
 
 
@@ -198,6 +201,7 @@ namespace Implementation.Repository
                             eamil = _context.Logins.Where(y => y.UserId == x.UserId).FirstOrDefault()?.Email,
                             address = x.Address,
                             ////lastlogin = _context.Logins.Where(x=>x.UserId == x.UserId).
+                            lastorderdate = _context.Orders.OrderByDescending(f => f.Cart.UserId == x.UserId).FirstOrDefault().OrderDate,
                             customerorderlist = result?.Where(y => y.userid == x.UserId).ToList()
 
 
@@ -240,6 +244,7 @@ namespace Implementation.Repository
                             eamil = _context.Logins.Where(y => y.UserId == x.UserId).FirstOrDefault()?.Email,
                             address = x.Address,
                             ////lastlogin = _context.Logins.Where(x=>x.UserId == x.UserId).
+                            lastorderdate = _context.Orders.OrderByDescending(f => f.Cart.UserId == x.UserId).FirstOrDefault().OrderDate,
                             customerorderlist = result?.Where(y => y.userid == x.UserId).ToList()
 
 
@@ -262,5 +267,28 @@ namespace Implementation.Repository
             }
 
         }
+
+        //public async Task<string> BannedAction(BannedDTO bannedDTO)
+        //{
+        //    try
+        //    {
+        //        CutomerBanned banned = new()
+        //        {
+        //            LoginId = bannedDTO.loginid,
+        //            BannedAction = bannedDTO.action,
+        //        };
+        //        await _context.AddAsync(banned);
+        //        _logger.LogInformation("Customer is Blocked");
+        //        return "Banned Customer";
+
+        //    }
+        //    catch (Exception ex) 
+        //    {
+        //        _logger.LogError(ex.Message);
+        //        return ex.Message;
+        //    }
+        //}
+
+
     }
 }

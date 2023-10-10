@@ -240,45 +240,44 @@ namespace Implementation.Repository
                 var orderall = await _context.Orders.ToListAsync();
                 if (orderall != null)
                 {
-                    var cart = await _context.Carts.Where(x=>x.IsActive == false).ToListAsync();
+                    var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
                     var cartmeal = await _context.CartItemMeals.ToListAsync();
                     var item = await _context.Items.ToListAsync();
-                    var meal =await _context.Meals.ToListAsync();
+                    var meal = await _context.Meals.ToListAsync();
 
-                    var result = from c in cart
-                                 join cim in cartmeal on c.CartId equals cim.CartId
-                                 where cim.ItemId != null
-                                 join i in item on cim.ItemId equals i.ItemId into ilist from i in ilist.DefaultIfEmpty()
-                                 where ilist != null
-                                 join m in meal on cim.MealId equals m.MealId into mlist from m in mlist.DefaultIfEmpty()
-                                 where mlist != null
-                                 //where c.CartId == cim.CartId
-                                 join o in orderall on c.CartId equals o.CartId
-                                 select new OrderItemandItemDTO
-                                 {
-                                     orderid = o.OrderId,
-                                     itemid = cim?.ItemId,
-                                     mealid = cim?.MealId,
-                                     itemname = i?.ItemName, /*item.Where(x=>x.ItemId.Equals(cim?.ItemId)).First()?.ItemName,*/
-                                     mealname = m?.MealName,  //meal.Where(x => x.MealId.Equals(cim?.MealId)).First()?.MealName,
-                                     qnty = cim.Quantity.ToString(),
-                                     netprice = cim.NetPrice.ToString()
-                                 };
+                    var result = (from c in cart
+                                  join cim in cartmeal on c.CartId equals cim.CartId
+                                  join i in item on cim.ItemId equals i.ItemId into ilist
+                                  from i in ilist.DefaultIfEmpty()
+                                  join m in meal on cim.MealId equals m.MealId into mlist
+                                  from m in mlist.DefaultIfEmpty()
+                                  join o in orderall on c.CartId equals o.CartId
+                                  select new OrderItemandItemDTO
+                                  {
+                                      orderid = o.OrderId,
+                                      cartitmealid = cim.CartItemMealId,
+                                      itemid = cim?.ItemId,
+                                      mealid = cim?.MealId,
+                                      itemname = i?.ItemName, 
+                                      mealname = m?.MealName,  
+                                      qnty = cim.Quantity.ToString(),
+                                      netprice = cim.NetPrice.ToString()
+                                  }).DistinctBy(y => y.cartitmealid);
 
 
-                    List < OrderResponseDTO > responseDTOs = new List<OrderResponseDTO>();
+                    List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
                     foreach (var order in orderall)
                     {
                         responseDTOs.Add(new OrderResponseDTO
                         {
                             ordernumber = order.OrderId.ToString(),
-                            //customername = _context.Users.Where(x => x.UserId == cart.Single(y=>y.CartId == order.CartId).UserId).Single().FirstName,
-                            //customerphone = _context.Users.Where(x => x.UserId == cart.Find(y=> y.CartId == order.CartId).UserId).SingleOrDefault().Phone,
+                            customername = _context.Users.Where(x=>x.Carts.Any(y=>y.CartId == order.CartId)).First().FirstName,
+                            customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().Phone,
                             orderDate = order.OrderDate.ToString(),
                             delivarydate = order.DeliveryDate.ToString(),
                             orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
                             totalprice = order.TotalPrice.ToString(),
-                            orderitmlDTO = result?.Where(x=>x.orderid == order.OrderId).ToList() 
+                            orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
                         });
                     }
                     _logger.LogInformation("Show the list of Orders");
@@ -289,8 +288,342 @@ namespace Implementation.Repository
             catch (Exception ex)
             {
                 _logger.LogWarning(ex.Message);
-                return new List<OrderResponseDTO> { };
+                return new();
 
+            }
+        }
+        public async Task<List<OrderResponseDTO>> SortOrders( int? OrderNumber, string? CustomerName, string? CustomerPhone,
+            string? OrderStatus, DateTime? DellivaryDate, DateTime? OrderDate)
+        {
+            try
+            {
+                if (OrderNumber != null)
+                {
+                    var orderall = await _context.Orders.Where(x => x.OrderId == OrderNumber).ToListAsync();
+                    if (orderall != null)
+                    {
+                        var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                        var cartmeal = await _context.CartItemMeals.ToListAsync();
+                        var item = await _context.Items.ToListAsync();
+                        var meal = await _context.Meals.ToListAsync();
+
+                        var result = (from c in cart
+                                      join cim in cartmeal on c.CartId equals cim.CartId
+                                      join i in item on cim.ItemId equals i.ItemId into ilist
+                                      from i in ilist.DefaultIfEmpty()
+                                      join m in meal on cim.MealId equals m.MealId into mlist
+                                      from m in mlist.DefaultIfEmpty()
+                                      join o in orderall on c.CartId equals o.CartId
+                                      select new OrderItemandItemDTO
+                                      {
+                                          orderid = o.OrderId,
+                                          cartitmealid = cim.CartItemMealId,
+                                          itemid = cim?.ItemId,
+                                          mealid = cim?.MealId,
+                                          itemname = i?.ItemName,
+                                          mealname = m?.MealName,
+                                          qnty = cim.Quantity.ToString(),
+                                          netprice = cim.NetPrice.ToString()
+                                      }).DistinctBy(y => y.cartitmealid);
+
+
+                        List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
+                        foreach (var order in orderall)
+                        {
+                            responseDTOs.Add(new OrderResponseDTO
+                            {
+                                ordernumber = order.OrderId.ToString(),
+                                customername = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().FirstName,
+                                customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().Phone,
+                                orderDate = order.OrderDate.ToString(),
+                                delivarydate = order.DeliveryDate.ToString(),
+                                orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                                totalprice = order.TotalPrice.ToString(),
+                                orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
+                            });
+                        }
+                        _logger.LogInformation("Show the list of Orders");
+                        return responseDTOs;
+                    }
+                }
+                if (CustomerName != null)
+
+                {
+                    var orderall = await _context.Orders.Where(n=>n.Cart.User.FirstName.Contains(CustomerName)).ToListAsync();
+                    if (orderall != null)
+                    {
+                        var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                        var cartmeal = await _context.CartItemMeals.ToListAsync();
+                        var item = await _context.Items.ToListAsync();
+                        var meal = await _context.Meals.ToListAsync();
+
+                        var result = (from c in cart
+                                      join cim in cartmeal on c.CartId equals cim.CartId
+                                      join i in item on cim.ItemId equals i.ItemId into ilist
+                                      from i in ilist.DefaultIfEmpty()
+                                      join m in meal on cim.MealId equals m.MealId into mlist
+                                      from m in mlist.DefaultIfEmpty()
+                                      join o in orderall on c.CartId equals o.CartId
+                                      select new OrderItemandItemDTO
+                                      {
+                                          orderid = o.OrderId,
+                                          cartitmealid = cim.CartItemMealId,
+                                          itemid = cim?.ItemId,
+                                          mealid = cim?.MealId,
+                                          itemname = i?.ItemName,
+                                          mealname = m?.MealName,
+                                          qnty = cim.Quantity.ToString(),
+                                          netprice = cim.NetPrice.ToString()
+                                      }).DistinctBy(y => y.cartitmealid);
+
+
+                        List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
+                        foreach (var order in orderall)
+                        {
+                            responseDTOs.Add(new OrderResponseDTO
+                            {
+                                ordernumber = order.OrderId.ToString(),
+                                customername = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().FirstName,
+                                customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().Phone,
+                                orderDate = order.OrderDate.ToString(),
+                                delivarydate = order.DeliveryDate.ToString(),
+                                orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                                totalprice = order.TotalPrice.ToString(),
+                                orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
+                            });
+                        }
+                        _logger.LogInformation("Show the list of Orders");
+                        return responseDTOs;
+                    }
+
+                }
+                if (CustomerPhone != null)
+                {
+                    var orderall = await _context.Orders.Where(n => n.Cart.User.Phone.Contains(CustomerPhone)).ToListAsync();
+                    if (orderall != null)
+                    {
+                        var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                        var cartmeal = await _context.CartItemMeals.ToListAsync();
+                        var item = await _context.Items.ToListAsync();
+                        var meal = await _context.Meals.ToListAsync();
+
+                        var result = (from c in cart
+                                      join cim in cartmeal on c.CartId equals cim.CartId
+                                      join i in item on cim.ItemId equals i.ItemId into ilist
+                                      from i in ilist.DefaultIfEmpty()
+                                      join m in meal on cim.MealId equals m.MealId into mlist
+                                      from m in mlist.DefaultIfEmpty()
+                                      join o in orderall on c.CartId equals o.CartId
+                                      select new OrderItemandItemDTO
+                                      {
+                                          orderid = o.OrderId,
+                                          cartitmealid = cim.CartItemMealId,
+                                          itemid = cim?.ItemId,
+                                          mealid = cim?.MealId,
+                                          itemname = i?.ItemName,
+                                          mealname = m?.MealName,
+                                          qnty = cim.Quantity.ToString(),
+                                          netprice = cim.NetPrice.ToString()
+                                      }).DistinctBy(y => y.cartitmealid);
+
+
+                        List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
+                        foreach (var order in orderall)
+                        {
+                            responseDTOs.Add(new OrderResponseDTO
+                            {
+                                ordernumber = order.OrderId.ToString(),
+                                customername = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().FirstName,
+                                customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().Phone,
+                                orderDate = order.OrderDate.ToString(),
+                                delivarydate = order.DeliveryDate.ToString(),
+                                orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                                totalprice = order.TotalPrice.ToString(),
+                                orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
+                            });
+                        }
+                        _logger.LogInformation("Show the list of Orders");
+                        return responseDTOs;
+                    }
+
+                }
+                if (OrderStatus != null)
+                {
+                    var orderall = await _context.Orders.Where(x=>x.OrderStatus.Status.Contains(OrderStatus)).ToListAsync();
+                    if (orderall != null)
+                    {
+                        var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                        var cartmeal = await _context.CartItemMeals.ToListAsync();
+                        var item = await _context.Items.ToListAsync();
+                        var meal = await _context.Meals.ToListAsync();
+
+                        var result = (from c in cart
+                                      join cim in cartmeal on c.CartId equals cim.CartId
+                                      join i in item on cim.ItemId equals i.ItemId into ilist
+                                      from i in ilist.DefaultIfEmpty()
+                                      join m in meal on cim.MealId equals m.MealId into mlist
+                                      from m in mlist.DefaultIfEmpty()
+                                      join o in orderall on c.CartId equals o.CartId
+                                      select new OrderItemandItemDTO
+                                      {
+                                          orderid = o.OrderId,
+                                          cartitmealid = cim.CartItemMealId,
+                                          itemid = cim?.ItemId,
+                                          mealid = cim?.MealId,
+                                          itemname = i?.ItemName,
+                                          mealname = m?.MealName,
+                                          qnty = cim.Quantity.ToString(),
+                                          netprice = cim.NetPrice.ToString()
+                                      }).DistinctBy(y => y.cartitmealid);
+
+
+                        List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
+                        foreach (var order in orderall)
+                        {
+                            responseDTOs.Add(new OrderResponseDTO
+                            {
+                                ordernumber = order.OrderId.ToString(),
+                                customername = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().FirstName,
+                                customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().Phone,
+                                orderDate = order.OrderDate.ToString(),
+                                delivarydate = order.DeliveryDate.ToString(),
+                                orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                                totalprice = order.TotalPrice.ToString(),
+                                orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
+                            });
+                        }
+                        _logger.LogInformation("Show the list of Orders");
+                        return responseDTOs;
+                    }
+                }
+                if(DellivaryDate != null)
+                {
+                    var orderall = await _context.Orders.Where(x => x.DeliveryDate >= DellivaryDate).ToListAsync();
+                    if (orderall != null)
+                    {
+                        var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                        var cartmeal = await _context.CartItemMeals.ToListAsync();
+                        var item = await _context.Items.ToListAsync();
+                        var meal = await _context.Meals.ToListAsync();
+
+                        var result = (from c in cart
+                                      join cim in cartmeal on c.CartId equals cim.CartId
+                                      join i in item on cim.ItemId equals i.ItemId into ilist
+                                      from i in ilist.DefaultIfEmpty()
+                                      join m in meal on cim.MealId equals m.MealId into mlist
+                                      from m in mlist.DefaultIfEmpty()
+                                      join o in orderall on c.CartId equals o.CartId
+                                      select new OrderItemandItemDTO
+                                      {
+                                          orderid = o.OrderId,
+                                          cartitmealid = cim.CartItemMealId,
+                                          itemid = cim?.ItemId,
+                                          mealid = cim?.MealId,
+                                          itemname = i?.ItemName,
+                                          mealname = m?.MealName,
+                                          qnty = cim.Quantity.ToString(),
+                                          netprice = cim.NetPrice.ToString()
+                                      }).DistinctBy(y => y.cartitmealid);
+
+
+                        List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
+                        foreach (var order in orderall)
+                        {
+                            responseDTOs.Add(new OrderResponseDTO
+                            {
+                                ordernumber = order.OrderId.ToString(),
+                                customername = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().FirstName,
+                                customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).First().Phone,
+                                orderDate = order.OrderDate.ToString(),
+                                delivarydate = order.DeliveryDate.ToString(),
+                                orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                                totalprice = order.TotalPrice.ToString(),
+                                orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
+                            });
+                        }
+                        _logger.LogInformation("Show the list of Orders");
+                        return responseDTOs;
+                    }
+                }
+                if(OrderDate != null)
+                {
+                    var orderall = await _context.Orders.Where(x=>x.OrderDate >= OrderDate).ToListAsync();
+                    if (orderall != null)
+                    {
+                        var cart = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                        var cartmeal = await _context.CartItemMeals.ToListAsync();
+                        var item = await _context.Items.ToListAsync();
+                        var meal = await _context.Meals.ToListAsync();
+
+                        var result = (from c in cart
+                                      join cim in cartmeal on c.CartId equals cim.CartId
+                                      join i in item on cim.ItemId equals i.ItemId into ilist
+                                      from i in ilist.DefaultIfEmpty()
+                                      join m in meal on cim.MealId equals m.MealId into mlist
+                                      from m in mlist.DefaultIfEmpty()
+                                      join o in orderall on c.CartId equals o.CartId
+                                      select new OrderItemandItemDTO
+                                      {
+                                          orderid = o.OrderId,
+                                          cartitmealid = cim.CartItemMealId,
+                                          itemid = cim?.ItemId,
+                                          mealid = cim?.MealId,
+                                          itemname = i?.ItemName,
+                                          mealname = m?.MealName,
+                                          qnty = cim.Quantity.ToString(),
+                                          netprice = cim.NetPrice.ToString()
+                                      }).DistinctBy(y => y.cartitmealid);
+
+
+                        List<OrderResponseDTO> responseDTOs = new List<OrderResponseDTO>();
+                        foreach (var order in orderall)
+                        {
+                            responseDTOs.Add(new OrderResponseDTO
+                            {
+                                ordernumber = order.OrderId.ToString(),
+                                customername = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).FirstOrDefault().FirstName,
+                                customerphone = _context.Users.Where(x => x.Carts.Any(y => y.CartId == order.CartId)).FirstOrDefault().Phone,
+                                orderDate = order.OrderDate.ToString(),
+                                delivarydate = order.DeliveryDate.ToString(),
+                                orderstatus = _context.OrderStatuses.Where(x => x.OrderStatusId == order.OrderStatusId).FirstOrDefault().Status,
+                                totalprice = order.TotalPrice.ToString(),
+                                orderitmlDTO = result?.Where(x => x.orderid == order.OrderId).ToList()
+                            });
+                        }
+                        _logger.LogInformation("Show the list of Orders");
+                        return responseDTOs;
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation($"We Get Exception {ex.Message}");
+                return null;
+
+            }
+        }
+
+        public async Task<string> Editeonorderstatusinorder(int OrderNumber, int orderstatusid)
+        {
+            try
+            {
+                var order = await _context.Orders.Where(x => x.OrderId == OrderNumber).FirstOrDefaultAsync();
+                if(order == null)
+                {
+                    _logger.LogInformation($"No Order Has Order Number: {OrderNumber}");
+                    return $"No Order Has Order Number: {OrderNumber}";
+                }
+                order.OrderStatusId = orderstatusid;
+                _context.Update(order);
+                _logger.LogInformation($"Updated on Order Status to Order Number {OrderNumber}");
+                return $"Updated on Order Status to Order Number {OrderNumber}";
+            }
+            catch(Exception ex) 
+            {
+                _logger.LogError($"Exception {ex.Message}");
+                return ex.Message;
+            
             }
         }
 
@@ -426,6 +759,49 @@ namespace Implementation.Repository
                 return new List<Payment>();
             }
         }
+
+        public async Task<string> RemoveFromOrder(int id, RemoveItemsOrMealsFromOrderDTO removeIMDTO)
+        {
+            try
+            {
+                var order = await _context.Orders.Where(x=>x.OrderId == id).FirstOrDefaultAsync();
+                if(order == null)
+                {
+                    _logger.LogInformation($"No order has Number id {id}");
+                    return $"No order has Number id {id}";
+                }
+                var cart = await _context.Carts.Where(x => x.CartId == order.CartId).FirstOrDefaultAsync();
+                var cartitem = await _context.CartItemMeals.Where(x => x.CartId == cart.CartId).FirstOrDefaultAsync();
+                ItemsMealsOnOrderDTO itmlDTO = new ItemsMealsOnOrderDTO();
+                cartitem.ItemId = itmlDTO.itemid;
+                cartitem.MealId = itmlDTO.mealid;
+                cartitem.Quantity = itmlDTO.qntyitem;
+                cartitem.Quantity = itmlDTO.qntymeal;
+                cartitem.NetPrice = (_context.Items.Where(x => x.ItemId == cartitem.ItemId).FirstOrDefault().Price * cartitem.Quantity);
+                cartitem.NetPrice = (_context.Meals.Where(x => x.MealId == cartitem.MealId).FirstOrDefault().Price * cartitem.Quantity);
+
+                _context.Update(cartitem);
+                _context.SaveChanges();
+
+                RemoveItemsOrMealsFromOrderDTO editeDTO = new RemoveItemsOrMealsFromOrderDTO();
+                order.DeliveryDate = DateTime.UtcNow.AddMinutes(.3 - 2);
+                order.DelivaryAddress = editeDTO.deliverydarress;
+                order.TotalPrice = _context.CartItemMeals.Where(x => x.CartId == cart.CartId).Sum(o => o.NetPrice);
+
+                _context.Update(order);
+                _logger.LogInformation($"Updtaed on order Number {id}");
+                return $"Updtaed on order Number {id}";
+
+
+            }
+            catch(Exception ex)
+            {
+                _logger.LogWarning("Error");
+                return ex.Message;
+
+            }
+        }
+
 
         #endregion
 

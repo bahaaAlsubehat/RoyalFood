@@ -12,14 +12,14 @@ namespace RoyalFood.Controllers
     public class OrderManagement : ControllerBase
     {
         private readonly IUnitOfWork _unitOfWork;
-        public OrderManagement(IUnitOfWork unitOfWork) 
+        public OrderManagement(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
-        
+
         }
         [AllowAnonymous]
         [HttpPost("AddToCart{userid}")]
-        public async Task<IActionResult> AddToCart(int userid, int? itemid,  int? mealid, int qnty)
+        public async Task<IActionResult> AddToCart(int userid, int? itemid, int? mealid, int qnty)
         {
             var cartAdd = await _unitOfWork.Ordermanagement.CreateCart(userid, itemid, mealid, qnty);
             await _unitOfWork.CompleteAsync();
@@ -49,6 +49,31 @@ namespace RoyalFood.Controllers
             await _unitOfWork.CompleteAsync();
             int PageSkip = PageNumber * PageSize - PageSize;
             return Ok(orderGet.Skip(PageSkip).Take(PageSize));
+        }
+
+        [HttpGet("FilterOrders")]
+        public async Task<IActionResult> FilterOrders(int PageSize, int PageNumber, int? OrderNumber, string? CustomerName, string? CustomerPhone,
+            string? OrderStatus, DateTime? DellivaryDate, DateTime? OrderDate)
+        {
+            var filterorder = await _unitOfWork.Ordermanagement.SortOrders(OrderNumber, CustomerName, CustomerPhone, OrderStatus, DellivaryDate, OrderDate);
+            await _unitOfWork.CompleteAsync();
+            return Ok(filterorder);
+        }
+
+        [HttpPatch("UpdateOrderStatusonOrder")]
+        public async Task<IActionResult> UpdateOrderStatusonOrder(int OrderNumber, [FromBody] int orderstatusid)
+        {
+            var updateorderstatus = await _unitOfWork.Ordermanagement.Editeonorderstatusinorder(OrderNumber, orderstatusid);
+            await _unitOfWork.CompleteAsync();
+            return Ok(updateorderstatus);
+        }
+
+        [HttpPut("UpdateonOrder)")]
+        public async Task<IActionResult> UpdateonOrder(int id, RemoveItemsOrMealsFromOrderDTO removeIMDTO)
+        {
+            var removing = await _unitOfWork.Ordermanagement.RemoveFromOrder(id, removeIMDTO);
+            await _unitOfWork.CompleteAsync();
+            return Ok(removing);
         }
         #region OrderStatus
         [Authorize(Roles = "Admin")]

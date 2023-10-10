@@ -13,7 +13,8 @@ namespace Interface.DTO
         public string ? username { get; set; }  
         public string? phone { get; set; }
         public string? eamil { get; set; }
-        public string? lastlogin { get; set; }   
+        public string? lastlogin { get; set; }
+        public DateTime? lastorderdate { get; set; }
         public string? address { get; set; }
         public List<CustomerOrderDTO?> customerorderlist { get; set; }
     }

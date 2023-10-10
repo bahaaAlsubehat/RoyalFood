@@ -354,6 +354,59 @@ namespace Implementation.Repository
             }
         }
 
+        public async Task<List<object>> ItemsTop10in7Days()
+        {
+            try
+            {
+                DateTime endtime = DateTime.UtcNow.Date;
+                DateTime starttime = endtime.AddDays(-7);
+                var carts = await _context.Carts.Where(x => x.IsActive == false).ToListAsync();
+                var cartitems = await _context.CartItemMeals.ToListAsync();
+                var items = await _context.Items.ToListAsync();
+                var orders = await _context.Orders.ToListAsync();
+                var top10 = (from c in carts
+                             join o in orders on c.CartId equals o.CartId
+                             join ci in cartitems on c.CartId equals ci.CartId
+                             join i in items on ci.ItemId equals i.ItemId
+                             select new Top10Items7DaysDTO
+                             {
+                                 orderid = orders.Where(s => s.DeliveryDate >= starttime && s.DeliveryDate <= endtime).FirstOrDefault().OrderId,
+                                 itemid = i.ItemId,
+                                 itemname = i.ItemName,
+                                 qny = cartitems.Where(u => u.ItemId == i.ItemId).Sum(c => c.Quantity)
+                             }).OrderByDescending(m => m.qny).DistinctBy(n => n.itemid).Take(10);
+
+                List<object> response = new List<object>();
+                foreach(var item in top10)
+                {
+                    response.Add(item.qny);
+                    response.Add(item.itemname);  
+                }
+                //Dictionary<string, int> top10itemsin7 = new Dictionary<string, int>();
+                //foreach(var item in top10itemsin7)
+                //{
+                //    string nametop = top10.Select(x => x.itemname).ToString();
+                //    if (top10itemsin7.ContainsKey(nametop))
+                //    {
+                //        top10itemsin7[nametop] += top10.Select(b => b.qny).Count();
+                //    }
+                //    else
+                //    {
+                //        top10itemsin7[nametop] = top10.Select(b => b.qny).Count();
+
+                //    }
+
+                //}
+                _logger.LogInformation("Top 10 Items Sales in Last 7 Days");
+                return response;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("We Get Exception");
+                return null;
+            }
+        }
+
 
     }
 }

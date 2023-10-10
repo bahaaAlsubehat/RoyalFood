@@ -1,4 +1,5 @@
-﻿using Interface.IUnitOfWork;
+﻿using Interface.DTO;
+using Interface.IUnitOfWork;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -31,5 +32,16 @@ namespace RoyalFood.Controllers
             await _unitOfWork.CompleteAsync();
             return Ok(filtercustomer);
         }
+
+        //[HttpPost("BannedCustomer")]
+        //public async Task<IActionResult> BannedCustomer(BannedDTO bannedDTO)
+        //{
+        //    var banned = await _unitOfWork.Customersmanagement.BannedAction(bannedDTO);
+        //    await _unitOfWork.CompleteAsync();
+        //    return Ok(banned);
+        //}
+
+
+
     }
 }

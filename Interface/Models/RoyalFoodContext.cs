@@ -21,6 +21,7 @@ namespace Interface.Models
         public virtual DbSet<Category> Categories { get; set; } = null!;
         public virtual DbSet<Customer> Customers { get; set; } = null!;
         public virtual DbSet<CustomerService> CustomerServices { get; set; } = null!;
+        public virtual DbSet<CutomerBanned> CutomerBanneds { get; set; } = null!;
         public virtual DbSet<Image> Images { get; set; } = null!;
         public virtual DbSet<ImageItem> ImageItems { get; set; } = null!;
         public virtual DbSet<ImageMeal> ImageMeals { get; set; } = null!;
@@ -119,6 +120,13 @@ namespace Interface.Models
                     .WithMany(p => p.CustomerServices)
                     .HasForeignKey(d => d.UserId)
                     .HasConstraintName("FK_CustomerService_User");
+            });
+
+            modelBuilder.Entity<CutomerBanned>(entity =>
+            {
+                entity.HasKey(e => e.CustomerBannedId);
+
+                entity.ToTable("CutomerBanned");
             });
 
             modelBuilder.Entity<Image>(entity =>
@@ -226,6 +234,8 @@ namespace Interface.Models
             modelBuilder.Entity<Login>(entity =>
             {
                 entity.ToTable("Login");
+
+                entity.Property(e => e.LoginDate).HasColumnType("datetime");
 
                 entity.HasOne(d => d.User)
                     .WithMany(p => p.Logins)

@@ -11,5 +11,6 @@ namespace Interface.IRepository
     {
         Task<List<CustomersResponseDTO>> AllCustomers();
         Task<List<CustomersResponseDTO>> SortCustomer(int? CustomerId, string? FirstName, string? Phone, string? lastname);
+        //Task<string> BannedAction(BannedDTO bannedDTO);
     }
 }

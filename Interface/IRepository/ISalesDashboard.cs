@@ -23,5 +23,6 @@ namespace Interface.IRepository
         Task<List<object>> TopMeals();
         Task<List<object>> TopCategoryItem();
         Task<List<object>> TopCategoriesMeals();
+        Task<List<object>> ItemsTop10in7Days();
     }
 }

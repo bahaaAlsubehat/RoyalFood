@@ -15,6 +15,11 @@ namespace Interface.IRepository
         Task<string> DeleteFromCart(int cartitml);
         Task<string> AddNewOrder(OrderDTO orderDTO);
         Task<List<OrderResponseDTO>> Allorders();
+        Task<List<OrderResponseDTO>> SortOrders( int? OrderNumber, string? CustomerName, string? CustomerPhone,
+            string? OrderStatus, DateTime? DellivaryDate, DateTime? OrderDate);
+        Task<string> Editeonorderstatusinorder(int OrderNumber, int orderstatusid);
+        Task<string> RemoveFromOrder(int id, RemoveItemsOrMealsFromOrderDTO removeIMDTO);
+
 
         #region OrderStatus
         Task<string> CreateOrderStatus(string OrderStatus);

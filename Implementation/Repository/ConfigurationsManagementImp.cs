@@ -206,8 +206,8 @@ namespace Implementation.Repository
                         Email = registerDTO.email,
                         Password = helper.GenerateSHA384String(registerDTO.password),
                         IsActive = true,
-                        UserId = user.UserId
-
+                        UserId = user.UserId,
+                        LoginDate = DateTime.UtcNow
 
                     };
                     await _context.AddAsync(login);
@@ -234,7 +234,7 @@ namespace Implementation.Repository
         }
         public async Task<string> Signin(LoginDTO loginDTO)
         {
-            var loginuser = await _context.Logins.SingleOrDefaultAsync(x => x.Email == loginDTO.email && x.Password == helper.GenerateSHA384String(loginDTO.password));
+            var loginuser = await _context.Logins.FirstOrDefaultAsync(x => x.Email == loginDTO.email && x.Password == helper.GenerateSHA384String(loginDTO.password));
             if (loginuser == null)
             {
                 return null;
@@ -248,14 +248,18 @@ namespace Implementation.Repository
                         Email = loginDTO.email,
                         Password = helper.GenerateSHA384String(loginDTO.password),
                         IsActive = true,
+                        LoginDate = DateTime.UtcNow.Date
 
                     };
+
+
                     User user = _context.Users.Include(x => x.Logins).Where(x => x.Logins.Any(login => login.Email == loginDTO.email)).FirstOrDefault();
                     if (user is null) return "User Not Found";
                     Role role = _context.Roles.Where(role => role.RoleId == user.RoleId).FirstOrDefault();
                     if (role is null) return "Role Not Found";
                     string roleName = role.RoleName;
                     string token = helper.GenerateJwtToken(loginDTO.email, roleName, loginuser.UserId ?? 0, true);
+                    _context.Update(login);
                     _logger.LogInformation("Return Token" + token);
                     return token;
                 }

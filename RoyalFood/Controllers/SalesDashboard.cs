@@ -90,5 +90,13 @@ namespace RoyalFood.Controllers
             await _unitOfWork.CompleteAsync();
             return Ok(cateorymealtop10);
         }
+
+        [HttpGet("Top10Items7Days")]
+        public async Task<IActionResult> Top10Items7Days()
+        {
+            var Resultin7Days = await _unitOfWork.Salesdashboard.ItemsTop10in7Days();
+            await _unitOfWork.CompleteAsync();
+            return Ok(Resultin7Days);
+        }
     }
 }

@@ -6,7 +6,7 @@ namespace Interface.Models
     public partial class CartItemMeal
     {
         public int CartItemMealId { get; set; }
-        public int CartId { get; set; }
+        public int? CartId { get; set; }
         public int? ItemId { get; set; }
         public int? Quantity { get; set; }
         public double? NetPrice { get; set; }
